@@ -8,6 +8,24 @@ import gov.nasa.arc.astrobee.types.Quaternion;
 import android.util.Log;
 import org.opencv.core.Mat;
 
+
+// opencv library
+import org.opencv.aruco.Aruco;
+import org.opencv.aruco.Dictionary;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Rect;
+import static org.opencv.android.Utils.matToBitmap;
+
+
+// java library
+import java.util.ArrayList;
+import java.util.List;
+
+
+
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee
  */
@@ -18,6 +36,7 @@ public class YourService extends KiboRpcService {
 
     @Override
     protected void runPlan1(){
+
         Log.i(TAG,"start mission");
         // the mission starts
 
@@ -32,6 +51,32 @@ public class YourService extends KiboRpcService {
 
         // report point1 arrival
         api.reportPoint1Arrival();
+
+        //opencv code
+        try {
+            Mat source = undistord(api.getMatNavCam());
+        }
+        catch (Exception ex )
+        {
+
+            Log.i(TAG,"podda setu");
+        }
+        finally {
+
+
+            Log.i(TAG,"shopno puron hoyeche");
+        }
+
+
+
+       // Mat src =  api.getMatNavCam();
+     //   Mat dst = new Mat();
+        //getNavCamIntrinsics();
+      // Mat cameraMatrix = Mat(3, 3, api.getNavCamIntrinsics());
+       // Mat cameraMatrix = new Mat(3,3,api.getNavCamIntrinsics());
+
+        //Mat distCoeffs = ;
+        //Imgproc.undistort(src, dst, cameraMatrix, distCoeffs);
 
         // get a camera image
         //Mat image = api.getMatNavCam();
@@ -77,7 +122,7 @@ public class YourService extends KiboRpcService {
 
         api.laserControl(true);
 
-       
+
 
 
         api.takeTarget2Snapshot();
@@ -114,6 +159,45 @@ public class YourService extends KiboRpcService {
     @Override
     protected void runPlan3(){
         // write here your plan 3
+    }
+
+    public Mat undistord(Mat src)
+    {
+        Mat dst = new Mat(1280, 960, CvType.CV_8UC1);
+        Mat cameraMatrix = new Mat(3, 3, CvType.CV_32FC1);
+        Mat distCoeffs = new Mat(1, 5, CvType.CV_32FC1);
+
+        int row = 0, col = 0;
+
+        double cameraMatrix_sim[] =
+                {
+                        344.173397, 0.000000, 630.793795,
+                        0.000000, 344.277922, 487.033834,
+                        0.000000, 0.000000, 1.000000
+                };
+        double distCoeffs_sim[] = {-0.152963, 0.017530, -0.001107, -0.000210, 0.000000};
+
+        double cameraMatrix_orbit[] =
+                {
+                        692.827528, 0.000000, 571.399891,
+                        0.000000, 691.919547, 504.956891,
+                        0.000000, 0.000000, 1.000000
+                };
+        double distCoeffs_orbit[] = {-0.312191, 0.073843, -0.000918, 0.001890, 0.000000};
+
+
+
+            cameraMatrix.put(row, col, cameraMatrix_sim);
+            distCoeffs.put(row, col, distCoeffs_sim);
+            Log.d("Mode[camera]:"," sim");
+
+
+
+        cameraMatrix.put(row, col, cameraMatrix_orbit);
+        distCoeffs.put(row, col, distCoeffs_orbit);
+
+        Imgproc.undistort(src, dst, cameraMatrix, distCoeffs);
+        return dst;
     }
 
     // You can add your method
